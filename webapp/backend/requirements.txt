@@ -1,0 +1,6 @@
+fastapi          # For creating the backend API
+uvicorn          # ASGI server to run FastAPI
+python-multipart # For handling file uploads
+pillow           # For image processing (optional, if you need to manipulate images)
+# torch            # PyTorch (if your DR lesion model uses PyTorch)
+tensorflow     # Uncomment this line if your model uses TensorFlow instead of PyTorch

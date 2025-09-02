@@ -1,0 +1,22 @@
+# Core ML and data
+tensorflow==2.13.0
+numpy
+pandas
+scikit-learn
+opencv-python
+albumentations
+matplotlib
+tqdm
+
+# Backend (FastAPI)
+fastapi
+uvicorn
+pydantic
+
+# Inference and deployment
+Pillow
+onnx
+onnxruntime
+
+# Utilities
+python-multipart

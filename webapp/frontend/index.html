@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diabetic Retinopathy Segmentation Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header>
+  <h1>Diabetic Retinopathy Segmentation Dashboard</h1>
+</header>
+
+<section id="upload-section">
+  <form id="uploadForm">
+    <input type="file" id="fileInput" accept="image/*">
+    <button type="submit">Process Image</button>
+  </form>
+  <p id="filename">No file selected</p>
+  <p id="status"></p>
+</section>
+
+<section id="outputs-section">
+  <h2>Model Outputs</h2>
+  <div class="images-container">
+    <div>
+      <h3>Original Image</h3>
+      <img id="originalImg" src="">
+    </div>
+    <div>
+      <h3>SegNet Output</h3>
+      <img id="segnetImg" src="">
+    </div>
+    <div>
+      <h3>U-Net++ Output</h3>
+      <img id="unetppImg" src="">
+    </div>
+  </div>
+</section>
+
+<section id="metrics-section">
+  <h2>Segmentation Metrics</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Model</th><th>Dice</th><th>IoU</th><th>Sensitivity</th><th>Specificity</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>SegNet</td>
+        <td id="segnet-dice">-</td>
+        <td id="segnet-iou">-</td>
+        <td id="segnet-sens">-</td>
+        <td id="segnet-spec">-</td>
+      </tr>
+      <tr>
+        <td>U-Net++</td>
+        <td id="unetpp-dice">-</td>
+        <td id="unetpp-iou">-</td>
+        <td id="unetpp-sens">-</td>
+        <td id="unetpp-spec">-</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="heatmap-section">
+  <h2>Visual Insights & Heatmaps</h2>
+  <button id="showHeatmapsBtn">Show Heatmaps</button>
+  <div class="heatmaps-container" id="heatmapsContainer">
+    <div>
+      <h3>SegNet Heatmap</h3>
+      <img id="segnetHeatmap" src="">
+    </div>
+    <div>
+      <h3>U-Net++ Heatmap</h3>
+      <img id="unetppHeatmap" src="">
+    </div>
+  </div>
+</section>
+
+<section id="insights-section">
+  <h2>Comparison & Insights</h2>
+  <p id="insightsText">Processing results will appear here.</p>
+</section>
+
+<footer>Team SCORPIO © 2025</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
