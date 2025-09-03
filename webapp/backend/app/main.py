@@ -1,14 +1,15 @@
-# webapp/backend/app/main.py
-from fastapi import FastAPI, UploadFile, File
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-import os, shutil, random
+import os
+import shutil
+import random
 from PIL import Image, ImageDraw
 
 app = FastAPI()
 
-# ✅ CORS for frontend access
+# ✅ Enable CORS for frontend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -16,33 +17,40 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ✅ Folder paths
 UPLOAD_DIR = "uploads"
 RESULT_DIR = "results"
-
-# ✅ Create folders if missing
 folders = [
-    "original", "segnet", "unetpp",
-    "heatmap/segnet", "heatmap/unetpp"
+    os.path.join(RESULT_DIR, "original"),
+    os.path.join(RESULT_DIR, "segnet"),
+    os.path.join(RESULT_DIR, "unetpp"),
+    os.path.join(RESULT_DIR, "heatmap", "segnet"),
+    os.path.join(RESULT_DIR, "heatmap", "unetpp")
 ]
-for f in folders:
-    os.makedirs(os.path.join(RESULT_DIR, f), exist_ok=True)
+
+# ✅ Create all required folders on startup
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+for f in folders:
+    os.makedirs(f, exist_ok=True)
 
 # ✅ Serve static files for results
 app.mount("/results", StaticFiles(directory=RESULT_DIR), name="results")
 
+
 def sanitize_filename(filename: str):
+    """Replace spaces and slashes for safety."""
     return filename.replace(" ", "_").replace("/", "_")
 
+
 def simulate_segmentation(input_path, output_path, model_type):
-    """Draw dummy segmentation marks"""
+    """Simulate segmentation by drawing random boxes."""
     im = Image.open(input_path).convert("RGB")
     draw = ImageDraw.Draw(im)
     w, h = im.size
 
     for _ in range(5):
-        x0 = random.randint(0, w//2)
-        y0 = random.randint(0, h//2)
+        x0 = random.randint(0, w // 2)
+        y0 = random.randint(0, h // 2)
         x1 = x0 + random.randint(20, 50)
         y1 = y0 + random.randint(20, 50)
         color = "red" if model_type == "segnet" else "green"
@@ -50,9 +58,11 @@ def simulate_segmentation(input_path, output_path, model_type):
 
     im.save(output_path)
 
+
 @app.get("/")
 def root():
-    return {"message": "Backend is running. Use /upload/ to POST images."}
+    return {"message": "Backend is running. Use /upload/ to process images."}
+
 
 @app.post("/upload/")
 async def upload_image(file: UploadFile = File(...)):
@@ -63,7 +73,7 @@ async def upload_image(file: UploadFile = File(...)):
     with open(file_path, "wb") as f:
         shutil.copyfileobj(file.file, f)
 
-    # ✅ Save original
+    # ✅ Save original copy in results
     shutil.copy(file_path, os.path.join(RESULT_DIR, "original", filename))
 
     # ✅ Simulate SegNet
@@ -74,11 +84,11 @@ async def upload_image(file: UploadFile = File(...)):
     unetpp_path = os.path.join(RESULT_DIR, "unetpp", filename)
     simulate_segmentation(file_path, unetpp_path, "unetpp")
 
-    # ✅ Simulate heatmaps (for demo just copy original)
-    shutil.copy(file_path, os.path.join(RESULT_DIR, "heatmap/segnet", filename))
-    shutil.copy(file_path, os.path.join(RESULT_DIR, "heatmap/unetpp", filename))
+    # ✅ Simulate heatmaps (for demo, just copy original)
+    shutil.copy(file_path, os.path.join(RESULT_DIR, "heatmap", "segnet", filename))
+    shutil.copy(file_path, os.path.join(RESULT_DIR, "heatmap", "unetpp", filename))
 
-    # ✅ Random metrics
+    # ✅ Generate random metrics
     metrics = {
         "segnet": {
             "dice": round(random.uniform(0.7, 0.85), 2),

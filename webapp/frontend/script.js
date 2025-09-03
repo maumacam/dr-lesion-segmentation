@@ -22,6 +22,8 @@ const segnetHeatmap = document.getElementById("segnetHeatmap");
 const unetppHeatmap = document.getElementById("unetppHeatmap");
 const heatmapsContainer = document.getElementById("heatmapsContainer");
 
+const clearResultsBtn = document.getElementById("clearResultsBtn");
+
 const insightsText = document.getElementById("insightsText");
 
 heatmapsContainer.style.display = "none";
@@ -29,6 +31,11 @@ heatmapsContainer.style.display = "none";
 // ✅ Sanitize filename for safe URLs
 function sanitizeFilename(name) {
   return name.replace(/\s+/g, "_").replace(/[^a-zA-Z0-9._-]/g, "");
+}
+
+// ✅ Add timestamp to avoid cache issues
+function addCacheBuster(url) {
+  return `${url}?t=${Date.now()}`;
 }
 
 fileInput.addEventListener("change", () => {
@@ -64,11 +71,11 @@ uploadForm.addEventListener("submit", async (e) => {
     const safeFilename = sanitizeFilename(data.filename);
 
     // ✅ Show original uploaded image
-    originalImg.src = URL.createObjectURL(file);
+    originalImg.src = addCacheBuster(URL.createObjectURL(file));
 
-    // ✅ Segmentation results (check backend endpoints!)
-    segnetImg.src = `http://127.0.0.1:8000/result/segnet/${safeFilename}`;
-    unetppImg.src = `http://127.0.0.1:8000/result/unetpp/${safeFilename}`;
+    // ✅ Segmentation results (with cache-busting)
+    segnetImg.src = addCacheBuster(`http://127.0.0.1:8000/result/segnet/${safeFilename}`);
+    unetppImg.src = addCacheBuster(`http://127.0.0.1:8000/result/unetpp/${safeFilename}`);
 
     // ✅ Metrics display
     segnetDice.textContent = data.metrics.segnet.dice.toFixed(2);
@@ -101,9 +108,47 @@ showHeatmapsBtn.addEventListener("click", () => {
   if (heatmapsContainer.style.display === "none") {
     heatmapsContainer.style.display = "flex";
     const safeFilename = sanitizeFilename(filenameEl.textContent);
-    segnetHeatmap.src = `http://127.0.0.1:8000/result/heatmap/segnet/${safeFilename}`;
-    unetppHeatmap.src = `http://127.0.0.1:8000/result/heatmap/unetpp/${safeFilename}`;
+    segnetHeatmap.src = addCacheBuster(`http://127.0.0.1:8000/result/heatmap/segnet/${safeFilename}`);
+    unetppHeatmap.src = addCacheBuster(`http://127.0.0.1:8000/result/heatmap/unetpp/${safeFilename}`);
   } else {
     heatmapsContainer.style.display = "none";
+  }
+});
+
+// ✅ Clear all results
+clearResultsBtn.addEventListener("click", async () => {
+  if (!confirm("Are you sure you want to delete all old results?")) return;
+
+  try {
+    const response = await fetch("http://127.0.0.1:8000/clear-results/", {
+      method: "DELETE"
+    });
+
+    if (!response.ok) throw new Error("Failed to clear results");
+
+    const data = await response.json();
+    alert(data.message);
+
+    // Reset UI
+    originalImg.src = "";
+    segnetImg.src = "";
+    unetppImg.src = "";
+    segnetHeatmap.src = "";
+    unetppHeatmap.src = "";
+    segnetDice.textContent = "-";
+    segnetIoU.textContent = "-";
+    segnetSens.textContent = "-";
+    segnetSpec.textContent = "-";
+    unetppDice.textContent = "-";
+    unetppIoU.textContent = "-";
+    unetppSens.textContent = "-";
+    unetppSpec.textContent = "-";
+    insightsText.textContent = "Processing results will appear here.";
+    filenameEl.textContent = "No file selected";
+    statusEl.textContent = "";
+
+  } catch (err) {
+    console.error("Error clearing results:", err);
+    alert("Failed to clear results.");
   }
 });
